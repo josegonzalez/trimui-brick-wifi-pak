@@ -5,6 +5,7 @@ cd "$progdir" || exit 1
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$progdir"
 echo 1 >/tmp/stay_awake
 trap "rm -f /tmp/stay_awake" EXIT INT TERM HUP QUIT
+RES_PATH="$progdir/res"
 
 wifi_off() {
     echo "Preparping to toggle wifi off..."
@@ -37,13 +38,18 @@ wifi_on() {
     ( (udhcpc -i wlan0 &) &)
 }
 
-if pgrep wpa_supplicant; then
-    wifi_off
-else
-    wifi_on
-fi
+{
+    echo "Toggling wifi..."
+    if pgrep wpa_supplicant; then
+        show.elf "$RES_PATH/disable.png" 2
+        echo "Stopping wifi..."
+        wifi_off
+    else
+        show.elf "$RES_PATH/enable.png" 2
+        echo "Starting wifi..."
+        wifi_on
+    fi
 
-echo "Done toggling wifi!"
-echo ""
-echo "Sleeping for 2 seconds."
-sleep 2
+    echo "Done toggling wifi!"
+    show.elf "$RES_PATH/done.png" 2
+} &> ./log.txt
