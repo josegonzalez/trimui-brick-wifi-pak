@@ -1,0 +1,5 @@
+{
+    "label": "Toggle Wifi",
+    "launch": "launch.sh",
+    "description": "Toggle Wifi on/off"
+}
