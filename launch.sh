@@ -38,7 +38,7 @@ wifi_on() {
     ( (udhcpc -i wlan0 &) &)
 }
 
-{
+main() {
     echo "Toggling wifi..."
     if pgrep wpa_supplicant; then
         show.elf "$RES_PATH/stopping.png" 2
@@ -52,4 +52,11 @@ wifi_on() {
 
     echo "Done toggling wifi!"
     show.elf "$RES_PATH/done.png" 2
-} &> ./log.txt
+}
+
+mkdir -p "$progdir/log"
+if [ -f "$progdir/log/launch.log" ]; then
+    mv "$progdir/log/launch.log" "$progdir/log/launch.log.old"
+fi
+
+main "$@" >"$progdir/log/launch.log" 2>&1
