@@ -41,11 +41,11 @@ wifi_on() {
 {
     echo "Toggling wifi..."
     if pgrep wpa_supplicant; then
-        show.elf "$RES_PATH/disable.png" 2
+        show.elf "$RES_PATH/stopping.png" 2
         echo "Stopping wifi..."
         wifi_off
     else
-        show.elf "$RES_PATH/enable.png" 2
+        show.elf "$RES_PATH/starting.png" 2
         echo "Starting wifi..."
         wifi_on
     fi
