@@ -28,7 +28,7 @@ wifi_off() {
 
     if [ ! -f /sys/class/rfkill/rfkill0/state ]; then
         echo "Blocking wireless..."
-        echo 0 >/sys/class/rfkill/rfkill0/state || true
+        rfkill block wifi || true
     fi
 
     cp "$progdir/res/wpa_supplicant.conf.tmpl" "$progdir/res/wpa_supplicant.conf"
@@ -74,7 +74,7 @@ wifi_on() {
     cp "$progdir/res/wpa_supplicant.conf" /etc/wifi/wpa_supplicant.conf
 
     echo "Unblocking wireless..."
-    echo 1 >/sys/class/rfkill/rfkill0/state || true
+    rfkill unblock wifi || true
 
     echo "Starting wpa_supplicant..."
     wpa_supplicant -B -D nl80211 -iwlan0 -c /etc/wifi/wpa_supplicant.conf -O /etc/wifi/sockets || true
