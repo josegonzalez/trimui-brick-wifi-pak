@@ -3,18 +3,25 @@
 A TrimUI Brick app that toggles wifi on or off.
 
 > [!IMPORTANT]
-> In some cases, the Trimui Brick may fail to connect to wifi while still displaying the wifi icon. Toggle the wifi off/on with this pak to reconnect if this is the case.
+> There is a known issue in MinUI where Wifi is partially toggled off on boot, though still shows the Wifi icon. If you are unable to access services on the Brick, toggle wifi off and then on again using this app first.
 
 ## Installation
 
 1. Mount your TrimUI Brick SD card.
 2. Download the latest release from Github. It will be named `Toggle.Wifi.pak.zip`.
-3. Copy the zip file to `/Tools/tg3040/Toggle Wifi.pak.zip`.
+3. Copy the zip file to `/Tools/tg3040/Toggle Wifi.pak.zip`. Please ensure the new zip file name is `Toggle Wifi.pak.zip`, without a dot (`.`) between the words `Toggle` and `Wifi`.
 4. Extract the zip in place, then delete the zip file.
 5. Confirm that there is a `/Tools/tg3040/Toggle Wifi.pak/launch.sh` file on your SD card.
 6. Unmount your SD Card and insert it into your TrimUI Brick.
 
 ## Usage
+
+> [!IMPORTANT]
+> If the zip file was not extracted correctly, the pak may show up under `Tools > Toggle`. Rename the folder to `Toggle Wifi.pak` to fix this.
+
+Browse to `Tools > Toggle Wifi` and press `A` to toggle wifi on/off.
+
+### Customizing Wifi Credentials
 
 In the `/Tools/tg3040/Toggle Wifi.pak` folder, there will be a `wifi.txt` file. This file should store network credentials for accessing your wifi networks.
 
