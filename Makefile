@@ -1,3 +1,5 @@
+PAK_NAME := $(shell jq -r .label config.json)
+
 clean:
 	rm -f bin/jq || true
 
