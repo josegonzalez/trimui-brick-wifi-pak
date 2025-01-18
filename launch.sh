@@ -6,7 +6,7 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$progdir/lib"
 echo 1 >/tmp/stay_awake
 trap "rm -f /tmp/stay_awake" EXIT INT TERM HUP QUIT
 RES_PATH="$progdir/res"
-set -x
+
 wifi_off() {
     SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
     echo "Preparing to toggle wifi off..."
