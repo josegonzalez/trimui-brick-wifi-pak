@@ -18,7 +18,7 @@ bin/minui-keyboard-tg5040:
 	chmod +x bin/minui-keyboard-tg5040
 
 bin/minui-list-tg5040:
-	curl -o bin/minui-list-tg5040 -sSL https://github.com/josegonzalez/minui-list/releases/download/0.1.0/minui-list-tg5040
+	curl -o bin/minui-list-tg5040 -sSL https://github.com/josegonzalez/minui-list/releases/download/0.2.0/minui-list-tg5040
 	chmod +x bin/minui-list-tg5040
 
 bin/sdl2imgshow:
