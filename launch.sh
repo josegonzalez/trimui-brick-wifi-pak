@@ -7,6 +7,36 @@ echo 1 >/tmp/stay_awake
 trap "rm -f /tmp/stay_awake" EXIT INT TERM HUP QUIT
 RES_PATH="$progdir/res"
 
+show_message() {
+    message="$1"
+    seconds="$2"
+
+    if [ -z "$seconds" ]; then
+        seconds="forever"
+    fi
+
+    killall sdl2imgshow
+    echo "$message"
+    if [ "$seconds" = "forever" ]; then
+        "$progdir/bin/sdl2imgshow" \
+            -i "$progdir/res/background.png" \
+            -f "$progdir/res/fonts/BPreplayBold.otf" \
+            -s 27 \
+            -c "220,220,220" \
+            -q \
+            -t "$message" &
+    else
+        "$progdir/bin/sdl2imgshow" \
+            -i "$progdir/res/background.png" \
+            -f "$progdir/res/fonts/BPreplayBold.otf" \
+            -s 27 \
+            -c "220,220,220" \
+            -q \
+            -t "$message"
+        sleep "$seconds"
+    fi
+}
+
 wifi_off() {
     SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
     echo "Preparing to toggle wifi off..."
@@ -102,17 +132,20 @@ wifi_on() {
 main() {
     echo "Toggling wifi..."
     if grep -q "up" /sys/class/net/wlan0/operstate; then
-        show.elf "$RES_PATH/stopping.png" 2
-        echo "Stopping wifi..."
+        show_message "Stopping wifi..." forever
         wifi_off
     else
-        show.elf "$RES_PATH/starting.png" 2
-        echo "Starting wifi..."
-        wifi_on
+        show_message "Starting wifi..." forever
+        if ! wifi_on; then
+            show_message "Failed to start wifi!" 2
+            killall sdl2imgshow
+            exit 1
+        fi
     fi
 
     echo "Done toggling wifi!"
-    show.elf "$RES_PATH/done.png" 2
+    show_message "Done" 2
+    killall sdl2imgshow
 }
 
 mkdir -p "$progdir/log"
