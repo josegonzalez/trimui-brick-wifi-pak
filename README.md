@@ -23,7 +23,10 @@ Browse to `Tools > Toggle Wifi` and press `A` to toggle wifi on/off.
 
 ### Customizing Wifi Credentials
 
-In the `/Tools/tg3040/Toggle Wifi.pak` folder, there will be a `wifi.txt` file. This file should store network credentials for accessing your wifi networks.
+In the root of your SD card, place a `wifi.txt` file. This file should store network credentials for accessing your wifi networks.
+
+> [!NOTE]
+> In previous versions of the pak, this file could also be located at `/Tools/tg3040/Toggle Wifi.pak/wifi.txt`. The old path is still supported - though deprecated - and users should migrate to the new path. New versions of the pak will transparently migrate the `wifi.txt` to the root of the SD card.
 
 Format:
 
