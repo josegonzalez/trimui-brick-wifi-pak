@@ -14,11 +14,11 @@ bin/jq:
 	curl -o bin/jq -sSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64
 
 bin/minui-keyboard-tg5040:
-	curl -o bin/minui-keyboard-tg5040 -sSL https://github.com/josegonzalez/minui-keyboard-tg5040/releases/download/latest/minui-keyboard-tg5040
+	curl -o bin/minui-keyboard-tg5040 -sSL https://github.com/josegonzalez/minui-keyboard/releases/download/0.1.0/minui-keyboard-tg5040
 	chmod +x bin/minui-keyboard-tg5040
 
 bin/minui-list-tg5040:
-	curl -o bin/minui-list-tg5040 -sSL https://github.com/josegonzalez/minui-list-tg5040/releases/download/latest/minui-list-tg5040
+	curl -o bin/minui-list-tg5040 -sSL https://github.com/josegonzalez/minui-list/releases/download/0.1.0/minui-list-tg5040
 	chmod +x bin/minui-list-tg5040
 
 bin/sdl2imgshow:
