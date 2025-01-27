@@ -17,6 +17,7 @@ wifi_off() {
 
     if pgrep wpa_supplicant; then
         echo "Stopping wpa_supplicant..."
+        /etc/init.d/wpa_supplicant stop || true
         killall -9 wpa_supplicant || true
     fi
 
@@ -77,7 +78,8 @@ wifi_on() {
     rfkill unblock wifi || true
 
     echo "Starting wpa_supplicant..."
-    wpa_supplicant -B -D nl80211 -iwlan0 -c /etc/wifi/wpa_supplicant.conf -O /etc/wifi/sockets || true
+    /etc/init.d/wpa_supplicant stop || true
+    /etc/init.d/wpa_supplicant start || true
     ( (udhcpc -i wlan0 &) &)
 
     DELAY=30
