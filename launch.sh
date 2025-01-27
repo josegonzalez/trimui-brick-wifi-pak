@@ -261,6 +261,11 @@ network_loop() {
 
 main() {
     trap "killall sdl2imgshow" EXIT INT TERM HUP QUIT
+
+    if [ "$PLATFORM" = "tg3040" ] && [ -z "$DEVICE" ]; then
+        export DEVICE="brick"
+    fi
+
     while true; do
         selection="$(main_screen)"
         exit_code=$?
