@@ -24,16 +24,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create release
+        run: make clean build release
+
       - name: Get Pak Name
         id: pak-name
         run: |
           echo "PAK_NAME=$(jq -r .label config.json)" >> $GITHUB_OUTPUT
-
-      - name: Create Release zip
-        run: |
-          mkdir -p dist
-          git archive --format=zip --output "dist/${{ steps.pak-name.outputs.PAK_NAME }}.pak.zip" HEAD
-          ls -lah dist
 
       - name: Attest Build Provenance
         uses: actions/attest-build-provenance@v2.1.0
