@@ -101,7 +101,7 @@ wifi_on() {
 
 main() {
     echo "Toggling wifi..."
-    if pgrep wpa_supplicant; then
+    if grep -q "up" /sys/class/net/wlan0/operstate; then
         show.elf "$RES_PATH/stopping.png" 2
         echo "Stopping wifi..."
         wifi_off
