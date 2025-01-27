@@ -144,7 +144,7 @@ main() {
     fi
 
     echo "Done toggling wifi!"
-    show_message Done! 2
+    show_message "Done" 2
     killall sdl2imgshow
 }
 
