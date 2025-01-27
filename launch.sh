@@ -77,7 +77,7 @@ wifi_on() {
     echo "Generating wpa_supplicant.conf..."
 
     if [ ! -f "$SDCARD_PATH/wifi.txt" ] && [ -f "$progdir/wifi.txt" ]; then
-        cp "$progdir/wifi.txt" "$SDCARD_PATH/wifi.txt"
+        mv "$progdir/wifi.txt" "$SDCARD_PATH/wifi.txt"
     fi
 
     touch "$SDCARD_PATH/wifi.txt"
