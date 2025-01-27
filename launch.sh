@@ -132,10 +132,10 @@ wifi_on() {
 main() {
     echo "Toggling wifi..."
     if grep -q "up" /sys/class/net/wlan0/operstate; then
-        show_message "Stopping wifi..."
+        show_message "Stopping wifi..." forever
         wifi_off
     else
-        show_message "Starting wifi..."
+        show_message "Starting wifi..." forever
         if ! wifi_on; then
             show_message "Failed to start wifi!" 2
             killall sdl2imgshow
