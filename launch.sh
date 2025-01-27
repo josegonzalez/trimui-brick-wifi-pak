@@ -46,7 +46,14 @@ wifi_on() {
     cp "$progdir/res/wpa_supplicant.conf.tmpl" "$progdir/res/wpa_supplicant.conf"
     echo "Generating wpa_supplicant.conf..."
 
-    echo "" >>"$progdir/wifi.txt"
+    if [ ! -f "$SDCARD_PATH/wifi.txt" ] && [ -f "$progdir/wifi.txt" ]; then
+        cp "$progdir/wifi.txt" "$SDCARD_PATH/wifi.txt"
+    fi
+
+    touch "$SDCARD_PATH/wifi.txt"
+    sed -i '/^$/d' "$SDCARD_PATH/wifi.txt"
+
+    echo "" >>"$SDCARD_PATH/wifi.txt"
     while read -r line; do
         line="$(echo "$line" | xargs)"
         if [ -z "$line" ]; then
@@ -70,7 +77,7 @@ wifi_on() {
             echo "    psk=\"$psk\""
             echo "}"
         } >>"$progdir/res/wpa_supplicant.conf"
-    done <"$progdir/wifi.txt"
+    done <"$SDCARD_PATH/wifi.txt"
 
     cp "$progdir/res/wpa_supplicant.conf" /etc/wifi/wpa_supplicant.conf
 
