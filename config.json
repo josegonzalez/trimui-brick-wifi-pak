@@ -1,5 +1,5 @@
 {
-    "label": "Toggle Wifi",
+    "label": "Wifi",
     "launch": "launch.sh",
-    "description": "Toggle Wifi on/off"
+    "description": "Manage Wifi settings"
 }
