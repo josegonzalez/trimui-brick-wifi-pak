@@ -4,12 +4,22 @@ PAK_NAME := $(shell jq -r .label config.json)
 clean:
 	rm -f bin/jq || true
 	rm -f bin/sdl2imgshow || true
+	rm -f bin/minui-keyboard-tg5040 || true
+	rm -f bin/minui-list-tg5040 || true
 	rm -f res/fonts/BPreplayBold.otf || true
 
-build: bin/jq bin/sdl2imgshow res/fonts/BPreplayBold.otf
+build: bin/jq bin/sdl2imgshow bin/minui-keyboard-tg5040 bin/minui-list-tg5040 res/fonts/BPreplayBold.otf
 
 bin/jq:
 	curl -o bin/jq -sSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64
+
+bin/minui-keyboard-tg5040:
+	curl -o bin/minui-keyboard-tg5040 -sSL https://github.com/josegonzalez/minui-keyboard-tg5040/releases/download/latest/minui-keyboard-tg5040
+	chmod +x bin/minui-keyboard-tg5040
+
+bin/minui-list-tg5040:
+	curl -o bin/minui-list-tg5040 -sSL https://github.com/josegonzalez/minui-list-tg5040/releases/download/latest/minui-list-tg5040
+	chmod +x bin/minui-list-tg5040
 
 bin/sdl2imgshow:
 	docker buildx build --platform linux/arm64 --load -f Dockerfile.sdl2imgshow --progress plain -t app/sdl2imgshow:$(TAG) .

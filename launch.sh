@@ -5,7 +5,62 @@ cd "$progdir" || exit 1
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$progdir/lib"
 echo 1 >/tmp/stay_awake
 trap "rm -f /tmp/stay_awake" EXIT INT TERM HUP QUIT
-RES_PATH="$progdir/res"
+set -x
+main_screen() {
+    enabled="$(cat /sys/class/net/wlan0/operstate)"
+    configuration="Connected: false\nConnect?"
+    ip_address="N/A"
+    if [ "$enabled" = "up" ]; then
+        ssid="$(iw dev wlan0 link | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
+        ip_address="$(ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)"
+        configuration="Connected: true\nSSID: $ssid\nIP: $ip_address\nDisconnect?\nConnect to new network?"
+    fi
+
+    echo -e "$configuration" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Configuration"
+}
+
+networks_screen() {
+    show_message "Scanning for networks..." 2
+    DELAY=30
+    for i in $(seq 1 "$DELAY"); do
+        networks="$(iw dev wlan0 scan | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//' | sort)"
+        if [ -n "$networks" ]; then
+            break
+        fi
+        sleep 1
+    done
+    echo -e "$networks" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Networks"
+}
+
+password_screen() {
+    SSID="$1"
+
+    touch "$SDCARD_PATH/wifi.txt"
+    if grep -q "^$SSID:" "$SDCARD_PATH/wifi.txt" 2>/dev/null; then
+        return 0
+    fi
+
+    password="$("$progdir/bin/minui-keyboard-$PLATFORM" --header "Enter Password")"
+    exit_code=$?
+    if [ "$exit_code" -eq 2 ]; then
+        return 2
+    fi
+    if [ "$exit_code" -eq 3 ]; then
+        return 3
+    fi
+    if [ "$exit_code" -ne 0 ]; then
+        show_message "Error entering password" 2
+        return 1
+    fi
+
+    if [ -z "$password" ]; then
+        show_message "Password cannot be empty" 2
+        return 1
+    fi
+
+    touch "$SDCARD_PATH/wifi.txt"
+    echo "$SSID:$password" >>"$SDCARD_PATH/wifi.txt"
+}
 
 show_message() {
     message="$1"
@@ -16,7 +71,7 @@ show_message() {
     fi
 
     killall sdl2imgshow
-    echo "$message"
+    echo "$message" 1>&2
     if [ "$seconds" = "forever" ]; then
         "$progdir/bin/sdl2imgshow" \
             -i "$progdir/res/background.png" \
@@ -24,7 +79,7 @@ show_message() {
             -s 27 \
             -c "220,220,220" \
             -q \
-            -t "$message" &
+            -t "$message" >/dev/null 2>&1 &
     else
         "$progdir/bin/sdl2imgshow" \
             -i "$progdir/res/background.png" \
@@ -32,47 +87,12 @@ show_message() {
             -s 27 \
             -c "220,220,220" \
             -q \
-            -t "$message"
+            -t "$message" >/dev/null 2>&1
         sleep "$seconds"
     fi
 }
 
-wifi_off() {
-    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
-    echo "Preparing to toggle wifi off..."
-
-    chmod +x "$progdir/bin/jq"
-    "$progdir/bin/jq" '.wifi = 0' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
-    mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
-
-    if pgrep wpa_supplicant; then
-        echo "Stopping wpa_supplicant..."
-        /etc/init.d/wpa_supplicant stop || true
-        killall -9 wpa_supplicant || true
-    fi
-
-    status="$(cat /sys/class/net/wlan0/carrier)"
-    if [ "$status" = 1 ]; then
-        echo "Marking wlan0 interface down..."
-        ifconfig wlan0 down || true
-    fi
-
-    if [ ! -f /sys/class/rfkill/rfkill0/state ]; then
-        echo "Blocking wireless..."
-        rfkill block wifi || true
-    fi
-
-    cp "$progdir/res/wpa_supplicant.conf.tmpl" "$progdir/res/wpa_supplicant.conf"
-}
-
-wifi_on() {
-    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
-    echo "Preparing to toggle wifi on..."
-
-    chmod +x "$progdir/bin/jq"
-    "$progdir/bin/jq" '.wifi = 1' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
-    mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
-
+write_config() {
     cp "$progdir/res/wpa_supplicant.conf.tmpl" "$progdir/res/wpa_supplicant.conf"
     echo "Generating wpa_supplicant.conf..."
 
@@ -115,6 +135,13 @@ wifi_on() {
     done <"$SDCARD_PATH/wifi.txt"
 
     cp "$progdir/res/wpa_supplicant.conf" /etc/wifi/wpa_supplicant.conf
+}
+
+wifi_enable() {
+    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
+    chmod +x "$progdir/bin/jq"
+    "$progdir/bin/jq" '.wifi = 1' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
+    mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
 
     echo "Unblocking wireless..."
     rfkill unblock wifi || true
@@ -122,7 +149,45 @@ wifi_on() {
     echo "Starting wpa_supplicant..."
     /etc/init.d/wpa_supplicant stop || true
     /etc/init.d/wpa_supplicant start || true
-    ( (udhcpc -i wlan0 &) &)
+    ( (udhcpc -i wlan0 -q &) &)
+}
+
+wifi_off() {
+    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
+    echo "Preparing to toggle wifi off..."
+
+    chmod +x "$progdir/bin/jq"
+    "$progdir/bin/jq" '.wifi = 0' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
+    mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
+
+    if pgrep wpa_supplicant; then
+        echo "Stopping wpa_supplicant..."
+        /etc/init.d/wpa_supplicant stop || true
+        killall -9 wpa_supplicant || true
+    fi
+
+    status="$(cat /sys/class/net/wlan0/carrier)"
+    if [ "$status" = 1 ]; then
+        echo "Marking wlan0 interface down..."
+        ifconfig wlan0 down || true
+    fi
+
+    if [ ! -f /sys/class/rfkill/rfkill0/state ]; then
+        echo "Blocking wireless..."
+        rfkill block wifi || true
+    fi
+
+    cp "$progdir/res/wpa_supplicant.conf.tmpl" "$progdir/res/wpa_supplicant.conf"
+}
+
+wifi_on() {
+    echo "Preparing to toggle wifi on..."
+
+    if ! write_config; then
+        return 1
+    fi
+
+    wifi_enable
 
     DELAY=30
     for i in $(seq 1 "$DELAY"); do
@@ -132,23 +197,101 @@ wifi_on() {
         fi
         sleep 1
     done
+
+    if [ "$STATUS" != "up" ]; then
+        show_message "Failed to start wifi!" 2
+        return 1
+    fi
 }
 
-main() {
-    echo "Toggling wifi..."
-    if grep -q "up" /sys/class/net/wlan0/operstate; then
-        show_message "Stopping wifi"
-        wifi_off
-    else
-        show_message "Starting wifi"
+network_loop() {
+    show_message "Enabling wifi..." forever
+    wifi_enable
+
+    next_screen="main"
+    while true; do
+        SSID="$(networks_screen)"
+        exit_code=$?
+        # exit codes: 2 = back button (go back to main screen)
+        if [ "$exit_code" -eq 2 ]; then
+            break
+        fi
+
+        # exit codes: 3 = menu button (exit out of the app)
+        if [ "$exit_code" -eq 3 ]; then
+            next_screen="exit"
+            break
+        fi
+
+        # some sort of error and then go back to main screen
+        if [ "$exit_code" -ne 0 ]; then
+            show_message "Error selecting a network" 2
+            next_screen="main"
+            break
+        fi
+
+        password_screen "$SSID"
+        exit_code=$?
+        # exit codes: 2 = back button (go back to networks screen)
+        if [ "$exit_code" -eq 2 ]; then
+            continue
+        fi
+
+        # exit codes: 3 = menu button (exit out of the app)
+        if [ "$exit_code" -eq 3 ]; then
+            next_screen="exit"
+            break
+        fi
+
+        if [ "$exit_code" -ne 0 ]; then
+            continue
+        fi
+
+        show_message "Connecting to $SSID..." forever
         if ! wifi_on; then
             show_message "Failed to start wifi!" 2
             killall sdl2imgshow
             exit 1
         fi
-    fi
+        break
+    done
 
-    show_message "Done" 2
+    echo "$next_screen"
+}
+
+main() {
+    trap "killall sdl2imgshow" EXIT INT TERM HUP QUIT
+    while true; do
+        selection="$(main_screen)"
+        exit_code=$?
+        # exit codes: 2 = back button, 3 = menu button
+        if [ "$exit_code" -ne 0 ]; then
+            break
+        fi
+
+        reconnect=false
+        if echo "$selection" | grep -q "Connect to new network?"; then
+            reconnect=true
+        elif echo "$selection" | grep -q "Connect?"; then
+            reconnect=true
+        fi
+
+        if [ "$reconnect" = true ]; then
+            next_screen="$(network_loop)"
+            if [ "$next_screen" = "exit" ]; then
+                break
+            fi
+        fi
+
+        if echo "$selection" | grep -q "Disconnect?"; then
+            show_message "Disconnecting from wifi..." forever
+            if ! wifi_off; then
+                show_message "Failed to stop wifi!" 2
+                killall sdl2imgshow
+                exit 1
+            fi
+        fi
+    done
     killall sdl2imgshow
 }
 
