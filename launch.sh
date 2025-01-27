@@ -82,6 +82,11 @@ wifi_on() {
 
     touch "$SDCARD_PATH/wifi.txt"
     sed -i '/^$/d' "$SDCARD_PATH/wifi.txt"
+    # exit non-zero if no wifi.txt file or empty
+    if [ ! -s "$SDCARD_PATH/wifi.txt" ]; then
+        show_message "No credentials found in wifi.txt" 1
+        return 1
+    fi
 
     echo "" >>"$SDCARD_PATH/wifi.txt"
     while read -r line; do
