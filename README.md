@@ -9,10 +9,13 @@ A TrimUI Brick app that manages wifi connections.
 
 1. Mount your TrimUI Brick SD card.
 2. Download the latest release from Github. It will be named `Wifi.pak.zip`.
-3. Copy the zip file to `/Tools/tg3040/Wifi.pak.zip`.
+3. Copy the zip file to `/Tools/tg5040/Wifi.pak.zip`.
 4. Extract the zip in place, then delete the zip file.
-5. Confirm that there is a `/Tools/tg3040/Wifi.pak/launch.sh` file on your SD card.
+5. Confirm that there is a `/Tools/tg5040/Wifi.pak/launch.sh` file on your SD card.
 6. Unmount your SD Card and insert it into your TrimUI Brick.
+
+> [!NOTE]
+> The device directory changed from `/Tools/tg3040` to `/Tools/tg5040` in `MinUI-20250126-0` - released 2025-01-26. If you are using an older version of MinUI, use `/Tools/tg3040` instead.
 
 ## Usage
 
@@ -26,7 +29,7 @@ Browse to `Tools > Wifi` and press `A` to enter the wifi management screen. It w
 In the root of your SD card, place a `wifi.txt` file. This file should store network credentials for accessing your wifi networks.
 
 > [!NOTE]
-> In previous versions of the pak, this file could also be located at `/Tools/tg3040/Wifi.pak/wifi.txt`. The old path is still supported - though deprecated - and users should migrate to the new path. New versions of the pak will transparently migrate the `wifi.txt` to the root of the SD card.
+> In previous versions of the pak, this file could also be located at `/Tools/tg5040/Wifi.pak/wifi.txt`. The old path is still supported - though deprecated - and users should migrate to the new path. New versions of the pak will transparently migrate the `wifi.txt` to the root of the SD card.
 
 Format:
 
