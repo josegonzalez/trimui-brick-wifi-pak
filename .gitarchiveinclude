@@ -1,3 +1,5 @@
 bin/jq
+bin/minui-keyboard-tg5040
+bin/minui-list-tg5040
 bin/sdl2imgshow
 res/fonts/BPreplayBold.otf
