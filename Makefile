@@ -8,7 +8,7 @@ clean:
 	rm -f bin/minui-list-tg5040 || true
 	rm -f res/fonts/BPreplayBold.otf || true
 
-build: bin/jq bin/sdl2imgshow bin/minui-keyboard-tg5040 bin/minui-list-tg5040 res/fonts/BPreplayBold.otf
+build: bin/jq bin/minui-keyboard-tg5040 bin/minui-list-tg5040 bin/sdl2imgshow res/fonts/BPreplayBold.otf
 
 bin/jq:
 	curl -o bin/jq -sSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64
