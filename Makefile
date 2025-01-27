@@ -1,3 +1,4 @@
+TAG ?= latest
 PAK_NAME := $(shell jq -r .label config.json)
 
 clean:
