@@ -82,6 +82,11 @@ wifi_on() {
 
     touch "$SDCARD_PATH/wifi.txt"
     sed -i '/^$/d' "$SDCARD_PATH/wifi.txt"
+    # exit non-zero if no wifi.txt file or empty
+    if [ ! -s "$SDCARD_PATH/wifi.txt" ]; then
+        show_message "No credentials found in wifi.txt" 2
+        return 1
+    fi
 
     echo "" >>"$SDCARD_PATH/wifi.txt"
     while read -r line; do
@@ -132,10 +137,10 @@ wifi_on() {
 main() {
     echo "Toggling wifi..."
     if grep -q "up" /sys/class/net/wlan0/operstate; then
-        show_message "Stopping wifi..." forever
+        show_message "Stopping wifi"
         wifi_off
     else
-        show_message "Starting wifi..." forever
+        show_message "Starting wifi"
         if ! wifi_on; then
             show_message "Failed to start wifi!" 2
             killall sdl2imgshow
@@ -143,7 +148,6 @@ main() {
         fi
     fi
 
-    echo "Done toggling wifi!"
     show_message "Done" 2
     killall sdl2imgshow
 }
