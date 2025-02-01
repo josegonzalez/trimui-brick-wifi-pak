@@ -179,8 +179,9 @@ write_config() {
 }
 
 wifi_enable() {
-    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
-    if [ -f "$SYSTEM_JSON_PATH" ]; then
+    echo "Preparing to enable wifi..."
+    if [ "$PLATFORM" = "tg5040" ]; then
+        SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
         chmod +x "$JQ"
         "$JQ" '.wifi = 1' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
         mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
@@ -190,9 +191,17 @@ wifi_enable() {
     rfkill unblock wifi || true
 
     echo "Starting wpa_supplicant..."
-    /etc/init.d/wpa_supplicant stop || true
-    /etc/init.d/wpa_supplicant start || true
-    ( (udhcpc -i wlan0 -q &) &)
+    if [ "$PLATFORM" = "tg5040" ]; then
+        /etc/init.d/wpa_supplicant stop || true
+        /etc/init.d/wpa_supplicant start || true
+        ( (udhcpc -i wlan0 -q &) &)
+    elif [ "$PLATFORM" = "rg35xxplus" ]; then
+        systemctl start wpa_supplicant
+        systemctl start udhcpd
+    else
+        show_message "Error: $PLATFORM is not a supported platform" 1>&2
+        exit 1
+    fi
 }
 
 wifi_enabled() {
@@ -218,9 +227,8 @@ wifi_enabled() {
 
 wifi_off() {
     echo "Preparing to toggle wifi off..."
-
-    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
-    if [ -f "$SYSTEM_JSON_PATH" ]; then
+    if [ "$PLATFORM" = "tg5040" ]; then
+        SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
         chmod +x "$JQ"
         "$JQ" '.wifi = 0' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
         mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
@@ -347,6 +355,12 @@ main() {
     fi
     if [ ! -f "$progdir/bin/minui-list-$PLATFORM" ]; then
         show_message "$progdir/bin/minui-list-$PLATFORM not found" 1>&2
+        exit 1
+    fi
+
+    allowed_platforms="tg5040 rg35xxplus"
+    if ! echo "$allowed_platforms" | grep -q "$PLATFORM"; then
+        show_message "Error: $PLATFORM is not a supported platform" 1>&2
         exit 1
     fi
 
