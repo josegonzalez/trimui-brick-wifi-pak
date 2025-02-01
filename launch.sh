@@ -5,7 +5,12 @@ cd "$progdir" || exit 1
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$progdir/lib"
 echo 1 >/tmp/stay_awake
 trap "rm -f /tmp/stay_awake" EXIT INT TERM HUP QUIT
-set -x
+
+JQ="$progdir/bin/jq-arm"
+if uname -m | grep -q '64'; then
+    JQ="$progdir/bin/jq-arm64"
+fi
+
 main_screen() {
     enabled="$(cat /sys/class/net/wlan0/operstate)"
     configuration="Connected: false\nConnect?"
@@ -139,8 +144,8 @@ write_config() {
 
 wifi_enable() {
     SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
-    chmod +x "$progdir/bin/jq"
-    "$progdir/bin/jq" '.wifi = 1' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
+    chmod +x "$JQ"
+    "$JQ" '.wifi = 1' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
     mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
 
     echo "Unblocking wireless..."
@@ -156,8 +161,8 @@ wifi_off() {
     SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
     echo "Preparing to toggle wifi off..."
 
-    chmod +x "$progdir/bin/jq"
-    "$progdir/bin/jq" '.wifi = 0' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
+    chmod +x "$JQ"
+    "$JQ" '.wifi = 0' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
     mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
 
     if pgrep wpa_supplicant; then

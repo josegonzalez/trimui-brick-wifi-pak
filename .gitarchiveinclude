@@ -1,4 +1,5 @@
-bin/jq
+bin/jq-arm
+bin/jq-arm64
 bin/minui-keyboard-tg5040
 bin/minui-list-tg5040
 bin/sdl2imgshow
