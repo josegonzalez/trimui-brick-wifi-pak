@@ -360,8 +360,16 @@ main() {
 
     allowed_platforms="tg5040 rg35xxplus"
     if ! echo "$allowed_platforms" | grep -q "$PLATFORM"; then
-        show_message "Error: $PLATFORM is not a supported platform" 1>&2
+        show_message "$PLATFORM is not a supported platform" 1>&2
         exit 1
+    fi
+
+    if [ "$PLATFORM" = "rg35xxplus" ]; then
+        RGXX_MODEL="$(strings /mnt/vendor/bin/dmenu.bin | grep ^RG)"
+        if [ "$RGXX_MODEL" = "RG28xx" ]; then
+            show_message "Wifi not supported on RG28xx" 1>&2
+            exit 1
+        fi
     fi
 
     while true; do
