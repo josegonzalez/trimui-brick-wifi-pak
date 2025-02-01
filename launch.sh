@@ -12,11 +12,18 @@ if uname -m | grep -q '64'; then
 fi
 
 main_screen() {
+    minui_list_file="/tmp/minui-list"
+    rm -f "$minui_list_file"
+    touch "$minui_list_file"
     enabled="$(cat /sys/class/net/wlan0/operstate)"
-    configuration="Enabled: false\nEnable"
+    echo "Enabled: false" >>"$minui_list_file"
+    echo "Enable" >>"$minui_list_file"
+
     ip_address="N/A"
     if wifi_enabled; then
-        configuration="Enabled: true\nDisable\nConnect to network"
+        echo "Enabled: true" >"$minui_list_file"
+        echo "Disable" >>"$minui_list_file"
+        echo "Connect to network" >>"$minui_list_file"
     fi
 
     if [ "$enabled" = "up" ]; then
@@ -45,26 +52,34 @@ main_screen() {
             ip_address="N/A"
         fi
 
-        configuration="Enabled: true\nSSID: $ssid\nIP: $ip_address\nDisable\nConnect to network"
+        echo "Enabled: true" >"$minui_list_file"
+        echo "SSID: $ssid" >>"$minui_list_file"
+        echo "IP: $ip_address" >>"$minui_list_file"
+        echo "Disable" >>"$minui_list_file"
+        echo "Connect to network" >>"$minui_list_file"
     fi
 
     killall sdl2imgshow
-    echo -e "$configuration" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Configuration"
+    "$progdir/bin/minui-list-$PLATFORM" --file "$minui_list_file" --format text --header "Wifi Configuration"
 }
 
 networks_screen() {
     show_message "Scanning for networks..." 2
     DELAY=30
+
+    minui_list_file="/tmp/minui-list"
+    rm -f "$minui_list_file"
+    touch "$minui_list_file"
     for i in $(seq 1 "$DELAY"); do
-        networks="$(iw dev wlan0 scan | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//' | sort)"
-        if [ -n "$networks" ]; then
+        iw dev wlan0 scan | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//' | sort >>"$minui_list_file"
+        if [ -s "$minui_list_file" ]; then
             break
         fi
         sleep 1
     done
 
     killall sdl2imgshow
-    echo -e "$networks" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Networks"
+    "$progdir/bin/minui-list-$PLATFORM" --file "$minui_list_file" --format text --header "Wifi Networks"
 }
 
 password_screen() {
@@ -367,7 +382,7 @@ main() {
     if [ "$PLATFORM" = "rg35xxplus" ]; then
         RGXX_MODEL="$(strings /mnt/vendor/bin/dmenu.bin | grep ^RG)"
         if [ "$RGXX_MODEL" = "RG28xx" ]; then
-            show_message "Wifi not supported on RG28xx" 1>&2
+            show_message "Wifi not supported on RG28XX" 1>&2
             exit 1
         fi
     fi
