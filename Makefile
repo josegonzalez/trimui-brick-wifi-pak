@@ -1,29 +1,35 @@
 TAG ?= latest
 PAK_NAME := $(shell jq -r .label config.json)
 
+PLATFORMS := tg5040
+MINUI_LIST_VERSION := 0.3.0
+MINUI_KEYBOARD_VERSION := 0.2.0
+
+
 clean:
 	rm -f bin/jq-arm || true
 	rm -f bin/jq-arm64 || true
 	rm -f bin/sdl2imgshow || true
-	rm -f bin/minui-keyboard-tg5040 || true
-	rm -f bin/minui-list-tg5040 || true
+	rm -f bin/minui-keyboard-* || true
+	rm -f bin/minui-list-* || true
 	rm -f res/fonts/BPreplayBold.otf || true
 
-build: bin/jq-arm bin/jq-arm64 bin/minui-keyboard-tg5040 bin/minui-list-tg5040 bin/sdl2imgshow res/fonts/BPreplayBold.otf
+build: $(foreach platform,$(PLATFORMS),bin/minui-keyboard-$(platform) bin/minui-list-$(platform)) bin/jq-arm bin/jq-arm64 bin/sdl2imgshow res/fonts/BPreplayBold.otf
 
 bin/jq-arm:
-	curl -o bin/jq-arm -sSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-armhf
+	curl -f -o bin/jq-arm -sSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-armhf
 
 bin/jq-arm64:
-	curl -o bin/jq-arm64 -sSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64
+	curl -f -o bin/jq-arm64 -sSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64
 
-bin/minui-keyboard-tg5040:
-	curl -o bin/minui-keyboard-tg5040 -sSL https://github.com/josegonzalez/minui-keyboard/releases/download/0.1.0/minui-keyboard-tg5040
-	chmod +x bin/minui-keyboard-tg5040
+# dynamically create the minui-keyboard target for all platforms
+bin/minui-keyboard-%:
+	curl -f -o bin/minui-keyboard-$* -sSL https://github.com/josegonzalez/minui-keyboard/releases/download/$(MINUI_KEYBOARD_VERSION)/minui-keyboard-$*
+	chmod +x bin/minui-keyboard-$*
 
-bin/minui-list-tg5040:
-	curl -o bin/minui-list-tg5040 -sSL https://github.com/josegonzalez/minui-list/releases/download/0.2.0/minui-list-tg5040
-	chmod +x bin/minui-list-tg5040
+bin/minui-list-%:
+	curl -f -o bin/minui-list-$* -sSL https://github.com/josegonzalez/minui-list/releases/download/$(MINUI_LIST_VERSION)/minui-list-$*
+	chmod +x bin/minui-list-$*
 
 bin/sdl2imgshow:
 	docker buildx build --platform linux/arm64 --load -f Dockerfile.sdl2imgshow --progress plain -t app/sdl2imgshow:$(TAG) .
@@ -40,4 +46,4 @@ release: build
 
 res/fonts/BPreplayBold.otf:
 	mkdir -p res/fonts
-	curl -sSL -o res/fonts/BPreplayBold.otf "https://raw.githubusercontent.com/shauninman/MinUI/refs/heads/main/skeleton/SYSTEM/res/BPreplayBold-unhinted.otf"
+	curl -f -sSL -o res/fonts/BPreplayBold.otf "https://raw.githubusercontent.com/shauninman/MinUI/refs/heads/main/skeleton/SYSTEM/res/BPreplayBold-unhinted.otf"

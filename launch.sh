@@ -269,6 +269,22 @@ main() {
 
     if [ "$PLATFORM" = "tg3040" ] && [ -z "$DEVICE" ]; then
         export DEVICE="brick"
+        export PLATFORM="tg5040"
+    fi
+
+    allowed_platforms="tg5040"
+    if ! echo "$allowed_platforms" | grep -q "$PLATFORM"; then
+        show_message "$PLATFORM is not a supported platform" 1>&2
+        exit 1
+    fi
+
+    if [ ! -f "$progdir/bin/minui-keyboard-$PLATFORM" ]; then
+        show_message "$progdir/bin/minui-keyboard-$PLATFORM not found" 1>&2
+        exit 1
+    fi
+    if [ ! -f "$progdir/bin/minui-list-$PLATFORM" ]; then
+        show_message "$progdir/bin/minui-list-$PLATFORM not found" 1>&2
+        exit 1
     fi
 
     while true; do
