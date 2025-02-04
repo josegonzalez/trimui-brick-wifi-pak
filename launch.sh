@@ -13,12 +13,16 @@ fi
 
 main_screen() {
     enabled="$(cat /sys/class/net/wlan0/operstate)"
-    configuration="Connected: false\nConnect?"
+    configuration="Connected: false\nEnable"
     ip_address="N/A"
+    if wifi_enabled; then
+        configuration="Connected: true\nDisable\nConnect to new network"
+    fi
+
     if [ "$enabled" = "up" ]; then
         ssid="$(iw dev wlan0 link | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
         ip_address="$(ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)"
-        configuration="Connected: true\nSSID: $ssid\nIP: $ip_address\nDisconnect?\nConnect to new network?"
+        configuration="Connected: true\nSSID: $ssid\nIP: $ip_address\nDisable\nConnect to new network"
     fi
 
     echo -e "$configuration" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Configuration"
@@ -164,6 +168,29 @@ wifi_enable() {
     ( (udhcpc -i wlan0 -q &) &)
 }
 
+wifi_enabled() {
+    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
+    if [ -f "$SYSTEM_JSON_PATH" ]; then
+        chmod +x "$JQ"
+        wifi_enabled="$("$JQ" '.wifi' "$SYSTEM_JSON_PATH")"
+        if [ "$wifi_enabled" = "1" ]; then
+            return 0
+        fi
+
+        return 0
+    fi
+
+    if pgrep wpa_supplicant; then
+        return 0
+    fi
+
+    if [ "$(cat /sys/class/net/wlan0/carrier 2>/dev/null)" = "1" ]; then
+        return 0
+    fi
+
+    return 1
+}
+
 wifi_off() {
     echo "Preparing to toggle wifi off..."
 
@@ -304,21 +331,14 @@ main() {
             break
         fi
 
-        reconnect=false
-        if echo "$selection" | grep -q "Connect to new network?"; then
-            reconnect=true
-        elif echo "$selection" | grep -q "Connect?"; then
-            reconnect=true
-        fi
-
-        if [ "$reconnect" = true ]; then
+        if [ "$selection" = "Connect to network" ]; then
             next_screen="$(network_loop)"
             if [ "$next_screen" = "exit" ]; then
                 break
             fi
-        fi
-
-        if echo "$selection" | grep -q "Disconnect?"; then
+        elif [ "$selection" = "Enable" ]; then
+            wifi_enable
+        elif [ "$selection" = "Disable" ]; then
             show_message "Disconnecting from wifi..." forever
             if ! wifi_off; then
                 show_message "Failed to stop wifi!" 2
