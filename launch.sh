@@ -211,6 +211,9 @@ wifi_enable() {
         /etc/init.d/wpa_supplicant start || true
         ( (udhcpc -i wlan0 -q &) &)
     elif [ "$PLATFORM" = "rg35xxplus" ]; then
+        ip link set wlan0 up
+        iw dev wlan0 set power_save off
+
         systemctl start wpa_supplicant
         systemctl start udhcpd
     else
