@@ -305,9 +305,9 @@ main() {
     killall sdl2imgshow
 }
 
-mkdir -p "$progdir/log"
-if [ -f "$progdir/log/launch.log" ]; then
-    mv "$progdir/log/launch.log" "$progdir/log/launch.log.old"
+mkdir -p "$LOGS_PATH"
+if [ -f "$LOGS_PATH/Wifi.txt" ]; then
+    mv "$LOGS_PATH/Wifi.txt" "$LOGS_PATH/Wifi.txt.old"
 fi
 
-main "$@" >"$progdir/log/launch.log" 2>&1
+main "$@" >"$LOGS_PATH/Wifi.txt" 2>&1
