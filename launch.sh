@@ -125,6 +125,11 @@ write_config() {
             continue
         fi
 
+        # skip if line is not in the format "ssid:psk"
+        if ! echo "$line" | grep -q ":"; then
+            continue
+        fi
+
         ssid="$(echo "$line" | cut -d: -f1 | xargs)"
         psk="$(echo "$line" | cut -d: -f2- | xargs)"
         if [ -z "$ssid" ] || [ -z "$psk" ]; then
