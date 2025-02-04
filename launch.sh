@@ -144,9 +144,11 @@ write_config() {
 
 wifi_enable() {
     SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
-    chmod +x "$JQ"
-    "$JQ" '.wifi = 1' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
-    mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
+    if [ -f "$SYSTEM_JSON_PATH" ]; then
+        chmod +x "$JQ"
+        "$JQ" '.wifi = 1' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
+        mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
+    fi
 
     echo "Unblocking wireless..."
     rfkill unblock wifi || true
@@ -158,12 +160,14 @@ wifi_enable() {
 }
 
 wifi_off() {
-    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
     echo "Preparing to toggle wifi off..."
 
-    chmod +x "$JQ"
-    "$JQ" '.wifi = 0' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
-    mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
+    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
+    if [ -f "$SYSTEM_JSON_PATH" ]; then
+        chmod +x "$JQ"
+        "$JQ" '.wifi = 0' "$SYSTEM_JSON_PATH" >"/tmp/system.json.tmp"
+        mv "/tmp/system.json.tmp" "$SYSTEM_JSON_PATH"
+    fi
 
     if pgrep wpa_supplicant; then
         echo "Stopping wpa_supplicant..."
