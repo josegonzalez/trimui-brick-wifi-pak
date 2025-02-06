@@ -333,16 +333,16 @@ main() {
             break
         fi
 
-        if echo "$selection" | grep -q "Connect to network"; then
+        if echo "$selection" | grep -q "^Connect to network$"; then
             next_screen="$(network_loop)"
             if [ "$next_screen" = "exit" ]; then
                 break
             fi
-        elif echo "$selection" | grep -q "Enable"; then
+        elif echo "$selection" | grep -q "^Enable$"; then
             show_message "Enabling wifi..." forever
             wifi_enable
             sleep 2
-        elif echo "$selection" | grep -q "Disable"; then
+        elif echo "$selection" | grep -q "^Disable$"; then
             show_message "Disconnecting from wifi..." forever
             if ! wifi_off; then
                 show_message "Failed to stop wifi!" 2
