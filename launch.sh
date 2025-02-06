@@ -25,6 +25,7 @@ main_screen() {
         configuration="Connected: true\nSSID: $ssid\nIP: $ip_address\nDisable\nConnect to new network"
     fi
 
+    killall sdl2imgshow
     echo -e "$configuration" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Configuration"
 }
 
@@ -38,6 +39,8 @@ networks_screen() {
         fi
         sleep 1
     done
+
+    killall sdl2imgshow
     echo -e "$networks" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Networks"
 }
 
@@ -49,6 +52,7 @@ password_screen() {
         return 0
     fi
 
+    killall sdl2imgshow
     password="$("$progdir/bin/minui-keyboard-$PLATFORM" --header "Enter Password")"
     exit_code=$?
     if [ "$exit_code" -eq 2 ]; then
