@@ -48,7 +48,7 @@ main_screen() {
         configuration="Enabled: true\nSSID: $ssid\nIP: $ip_address\nDisable\nConnect to network"
     fi
 
-    killall sdl2imgshow
+    killall sdl2imgshow 2>/dev/null || true
     echo -e "$configuration" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Configuration"
 }
 
@@ -63,7 +63,7 @@ networks_screen() {
         sleep 1
     done
 
-    killall sdl2imgshow
+    killall sdl2imgshow 2>/dev/null || true
     echo -e "$networks" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Networks"
 }
 
@@ -75,7 +75,7 @@ password_screen() {
         return 0
     fi
 
-    killall sdl2imgshow
+    killall sdl2imgshow 2>/dev/null || true
     password="$("$progdir/bin/minui-keyboard-$PLATFORM" --header "Enter Password")"
     exit_code=$?
     if [ "$exit_code" -eq 2 ]; then
@@ -106,7 +106,7 @@ show_message() {
         seconds="forever"
     fi
 
-    killall sdl2imgshow
+    killall sdl2imgshow 2>/dev/null || true
     echo "$message" 1>&2
     if [ "$seconds" = "forever" ]; then
         "$progdir/bin/sdl2imgshow" \
@@ -229,7 +229,7 @@ wifi_off() {
     if pgrep wpa_supplicant; then
         echo "Stopping wpa_supplicant..."
         /etc/init.d/wpa_supplicant stop || true
-        killall -9 wpa_supplicant || true
+        killall -9 wpa_supplicant 2>/dev/null || true
     fi
 
     status="$(cat /sys/class/net/wlan0/carrier)"
@@ -318,7 +318,7 @@ network_loop() {
         show_message "Connecting to $SSID..." forever
         if ! wifi_on; then
             show_message "Failed to start wifi!" 2
-            killall sdl2imgshow
+            killall sdl2imgshow 2>/dev/null || true
             exit 1
         fi
         break
@@ -328,7 +328,7 @@ network_loop() {
 }
 
 main() {
-    trap "killall sdl2imgshow" EXIT INT TERM HUP QUIT
+    trap "killall sdl2imgshow 2>/dev/null || true" EXIT INT TERM HUP QUIT
 
     if [ "$PLATFORM" = "tg3040" ] && [ -z "$DEVICE" ]; then
         export DEVICE="brick"
@@ -371,12 +371,12 @@ main() {
             show_message "Disconnecting from wifi..." forever
             if ! wifi_off; then
                 show_message "Failed to stop wifi!" 2
-                killall sdl2imgshow
+                killall sdl2imgshow 2>/dev/null || true
                 exit 1
             fi
         fi
     done
-    killall sdl2imgshow
+    killall sdl2imgshow 2>/dev/null || true
 }
 
 mkdir -p "$LOGS_PATH"
