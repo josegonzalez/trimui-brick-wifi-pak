@@ -248,8 +248,10 @@ wifi_on() {
 }
 
 network_loop() {
-    show_message "Enabling wifi..." forever
-    wifi_enable
+    if ! wifi_enabled; then
+        show_message "Enabling wifi..." forever
+        wifi_enable
+    fi
 
     next_screen="main"
     while true; do
