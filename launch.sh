@@ -173,22 +173,20 @@ wifi_enabled() {
     if [ -f "$SYSTEM_JSON_PATH" ]; then
         chmod +x "$JQ"
         wifi_enabled="$("$JQ" '.wifi' "$SYSTEM_JSON_PATH")"
-        if [ "$wifi_enabled" = "1" ]; then
-            return 0
+        if [ "$wifi_enabled" != "1" ]; then
+            return 1
         fi
-
-        return 0
     fi
 
-    if pgrep wpa_supplicant; then
-        return 0
+    if ! pgrep wpa_supplicant; then
+        return 1
     fi
 
-    if [ "$(cat /sys/class/net/wlan0/carrier 2>/dev/null)" = "1" ]; then
-        return 0
+    if [ "$(cat /sys/class/net/wlan0/carrier 2>/dev/null)" != "1" ]; then
+        return 1
     fi
 
-    return 1
+    return 0
 }
 
 wifi_off() {
