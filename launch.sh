@@ -13,14 +13,42 @@ fi
 
 main_screen() {
     enabled="$(cat /sys/class/net/wlan0/operstate)"
-    configuration="Connected: false\nConnect?"
+    configuration="Enabled: false\nEnable"
     ip_address="N/A"
-    if [ "$enabled" = "up" ]; then
-        ssid="$(iw dev wlan0 link | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
-        ip_address="$(ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)"
-        configuration="Connected: true\nSSID: $ssid\nIP: $ip_address\nDisconnect?\nConnect to new network?"
+    if wifi_enabled; then
+        configuration="Enabled: true\nDisable\nConnect to network"
     fi
 
+    if [ "$enabled" = "up" ]; then
+        ssid=""
+        ip_address=""
+
+        count=0
+        while true; do
+            count=$((count + 1))
+            if [ "$count" -gt 5 ]; then
+                break
+            fi
+
+            ssid="$(iw dev wlan0 link | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
+            ip_address="$(ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)"
+            if [ -n "$ip_address" ] && [ -n "$ssid" ]; then
+                break
+            fi
+            sleep 1
+        done
+
+        if [ -z "$ssid" ]; then
+            ssid="N/A"
+        fi
+        if [ -z "$ip_address" ]; then
+            ip_address="N/A"
+        fi
+
+        configuration="Enabled: true\nSSID: $ssid\nIP: $ip_address\nDisable\nConnect to network"
+    fi
+
+    killall sdl2imgshow
     echo -e "$configuration" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Configuration"
 }
 
@@ -34,6 +62,8 @@ networks_screen() {
         fi
         sleep 1
     done
+
+    killall sdl2imgshow
     echo -e "$networks" | "$progdir/bin/minui-list-$PLATFORM" --file - --format text --header "Wifi Networks"
 }
 
@@ -45,6 +75,7 @@ password_screen() {
         return 0
     fi
 
+    killall sdl2imgshow
     password="$("$progdir/bin/minui-keyboard-$PLATFORM" --header "Enter Password")"
     exit_code=$?
     if [ "$exit_code" -eq 2 ]; then
@@ -164,6 +195,27 @@ wifi_enable() {
     ( (udhcpc -i wlan0 -q &) &)
 }
 
+wifi_enabled() {
+    SYSTEM_JSON_PATH="/mnt/UDISK/system.json"
+    if [ -f "$SYSTEM_JSON_PATH" ]; then
+        chmod +x "$JQ"
+        wifi_enabled="$("$JQ" '.wifi' "$SYSTEM_JSON_PATH")"
+        if [ "$wifi_enabled" != "1" ]; then
+            return 1
+        fi
+    fi
+
+    if ! pgrep wpa_supplicant; then
+        return 1
+    fi
+
+    if [ "$(cat /sys/class/net/wlan0/carrier 2>/dev/null)" != "1" ]; then
+        return 1
+    fi
+
+    return 0
+}
+
 wifi_off() {
     echo "Preparing to toggle wifi off..."
 
@@ -219,8 +271,10 @@ wifi_on() {
 }
 
 network_loop() {
-    show_message "Enabling wifi..." forever
-    wifi_enable
+    if ! wifi_enabled; then
+        show_message "Enabling wifi..." forever
+        wifi_enable
+    fi
 
     next_screen="main"
     while true; do
@@ -304,21 +358,16 @@ main() {
             break
         fi
 
-        reconnect=false
-        if echo "$selection" | grep -q "Connect to new network?"; then
-            reconnect=true
-        elif echo "$selection" | grep -q "Connect?"; then
-            reconnect=true
-        fi
-
-        if [ "$reconnect" = true ]; then
+        if echo "$selection" | grep -q "^Connect to network$"; then
             next_screen="$(network_loop)"
             if [ "$next_screen" = "exit" ]; then
                 break
             fi
-        fi
-
-        if echo "$selection" | grep -q "Disconnect?"; then
+        elif echo "$selection" | grep -q "^Enable$"; then
+            show_message "Enabling wifi..." forever
+            wifi_enable
+            sleep 2
+        elif echo "$selection" | grep -q "^Disable$"; then
             show_message "Disconnecting from wifi..." forever
             if ! wifi_off; then
                 show_message "Failed to stop wifi!" 2
