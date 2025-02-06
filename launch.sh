@@ -13,16 +13,39 @@ fi
 
 main_screen() {
     enabled="$(cat /sys/class/net/wlan0/operstate)"
-    configuration="Connected: false\nEnable"
+    configuration="Enabled: false\nEnable"
     ip_address="N/A"
     if wifi_enabled; then
-        configuration="Connected: true\nDisable\nConnect to new network"
+        configuration="Enabled: true\nDisable\nConnect to network"
     fi
 
     if [ "$enabled" = "up" ]; then
-        ssid="$(iw dev wlan0 link | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
-        ip_address="$(ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)"
-        configuration="Connected: true\nSSID: $ssid\nIP: $ip_address\nDisable\nConnect to new network"
+        ssid=""
+        ip_address=""
+
+        count=0
+        while true; do
+            count=$((count + 1))
+            if [ "$count" -gt 5 ]; then
+                break
+            fi
+
+            ssid="$(iw dev wlan0 link | grep SSID: | cut -d':' -f2- | sed -e 's/^[ \t]*//' -e 's/[ \t]*$//')"
+            ip_address="$(ip addr show wlan0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)"
+            if [ -n "$ip_address" ] && [ -n "$ssid" ]; then
+                break
+            fi
+            sleep 1
+        done
+
+        if [ -z "$ssid" ]; then
+            ssid="N/A"
+        fi
+        if [ -z "$ip_address" ]; then
+            ip_address="N/A"
+        fi
+
+        configuration="Enabled: true\nSSID: $ssid\nIP: $ip_address\nDisable\nConnect to network"
     fi
 
     killall sdl2imgshow
