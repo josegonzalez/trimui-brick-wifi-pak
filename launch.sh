@@ -331,14 +331,14 @@ main() {
             break
         fi
 
-        if [ "$selection" = "Connect to network" ]; then
+        if echo "$selection" | grep -q "Connect to network"; then
             next_screen="$(network_loop)"
             if [ "$next_screen" = "exit" ]; then
                 break
             fi
-        elif [ "$selection" = "Enable" ]; then
+        elif echo "$selection" | grep -q "Enable"; then
             wifi_enable
-        elif [ "$selection" = "Disable" ]; then
+        elif echo "$selection" | grep -q "Disable"; then
             show_message "Disconnecting from wifi..." forever
             if ! wifi_off; then
                 show_message "Failed to stop wifi!" 2
